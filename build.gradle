@@ -1,0 +1,44 @@
+buildscript {
+    ext.javaRepos = {
+        mavenLocal()
+        maven {
+            url nexusRepositoryUrl + "/maven-public/"
+            credentials {
+                username = nexusDownloadUser
+                password = nexusDownloadPassword
+            }
+        }
+        mavenCentral()
+        jcenter()
+    }
+}
+
+
+repositories javaRepos
+
+apply plugin: 'java'
+
+javadoc.failOnError = false
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+version = 1.0
+
+apply plugin: 'maven-publish'
+
+dependencies {
+    testCompile "junit:junit:$junitVersion"
+    testCompile "org.slf4j:slf4j-jdk14:$slf4jVersion"
+    testCompile "org.apache.lucene:lucene-test-framework:$luceneVersion"
+
+    compile "org.slf4j:slf4j-api:$slf4jVersion"
+    compile "org.apache.lucene:lucene-core:$luceneVersion"
+    compile "org.apache.lucene:lucene-analyzers-common:$luceneVersion"
+}
+
+
+
+sourceSets.test {
+    resources.srcDirs = ["src/test/resources"]
+}
