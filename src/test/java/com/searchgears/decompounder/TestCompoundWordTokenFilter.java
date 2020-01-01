@@ -122,6 +122,23 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
     );
   }
 
+
+  public void testFugenlautNotInDictionary() throws Exception {
+    CharArraySet dict = makeDictionary("hase", "tasse");
+
+    String inputText = "Hasentasse";
+
+    DictionaryCompoundWordTokenFilter tf = createDictionaryCompoundWordTokenFilter(dict, inputText);
+
+    assertTokenStreamContents(tf,
+            new String[] {inputText, "Hase", "tasse"},
+            new int[] { 0, 0, 0},
+            new int[] { 10, 10, 10},
+            new int[] { 1, 0, 0}
+    );
+  }
+
+
   private DictionaryCompoundWordTokenFilter createDictionaryCompoundWordTokenFilter(CharArraySet dict, String inputText) {
     Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
     tokenizer.setReader(new StringReader(inputText));
