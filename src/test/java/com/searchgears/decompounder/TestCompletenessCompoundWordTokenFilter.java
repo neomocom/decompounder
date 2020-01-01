@@ -37,7 +37,7 @@ import org.apache.lucene.util.AttributeImpl;
 import org.apache.lucene.util.AttributeReflector;
 
 
-public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
+public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTestCase {
 
   private static CharArraySet makeDictionary(String... dictionary) {
     return new CharArraySet(Arrays.asList(dictionary), true);
@@ -49,7 +49,7 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
         "Pelar", "Glas", "Ögon", "Fodral", "Bas", "Fiol", "Makare", "Gesäll",
         "Sko", "Vind", "Rute", "Torkare", "Blad");
 
-    DictionaryCompoundWordTokenFilter tf = new DictionaryCompoundWordTokenFilter(
+    CompletenessCompoundWordTokenFilter tf = new CompletenessCompoundWordTokenFilter(
         whitespaceMockTokenizer(
                 "Bildörr Bilmotor Biltak Slagborr Hammarborr Pelarborr Glasögonfodral Basfiolsfodral "
                 + "Basfiolsfodralmakaregesäll Skomakare Vindrutetorkare Vindrutetorkarblad abba"),
@@ -78,16 +78,15 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
         "Pelar", "Glas", "Ögon", "Fodral", "Bas", "Fiols", "Makare", "Gesäll",
         "Sko", "Vind", "Rute", "Torkare", "Blad", "Fiolsfodral");
 
-    DictionaryCompoundWordTokenFilter tf = new DictionaryCompoundWordTokenFilter(
+    CompletenessCompoundWordTokenFilter tf = new CompletenessCompoundWordTokenFilter(
         whitespaceMockTokenizer("Basfiolsfodralmakaregesäll"),
         dict, CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
         CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
         CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, true);
 
     assertTokenStreamContents(tf, new String[] { "Basfiolsfodralmakaregesäll", "Bas",
-        "fiolsfodral", "fodral", "makare", "gesäll" }, new int[] { 0, 0, 0, 0,
-        0, 0 }, new int[] { 26, 26, 26, 26, 26, 26 }, new int[] { 1, 0, 0, 0,
-        0, 0 });
+        "fiolsfodral", "makare", "gesäll" }, new int[] { 0, 0, 0,
+        0, 0 }, new int[] { 26, 26, 26, 26, 26 }, new int[] { 1, 0, 0, 0, 0 });
   }
 
 
@@ -96,7 +95,7 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
 
     String inputText = "abcdef";
 
-    DictionaryCompoundWordTokenFilter tf = createDictionaryCompoundWordTokenFilter(dict, inputText);
+    CompletenessCompoundWordTokenFilter tf = createCompletenessCompoundWordTokenFilter(dict, inputText);
 
     assertTokenStreamContents(tf,
       new String[] {inputText, "ab", "cd", "ef" },
@@ -112,7 +111,7 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
 
     String inputText = "äbtissinnen";
 
-    DictionaryCompoundWordTokenFilter tf = createDictionaryCompoundWordTokenFilter(dict, inputText);
+    CompletenessCompoundWordTokenFilter tf = createCompletenessCompoundWordTokenFilter(dict, inputText);
 
     assertTokenStreamContents(tf,
             new String[] {inputText},
@@ -128,7 +127,7 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
 
     String inputText = "Hasentasse";
 
-    DictionaryCompoundWordTokenFilter tf = createDictionaryCompoundWordTokenFilter(dict, inputText);
+    CompletenessCompoundWordTokenFilter tf = createCompletenessCompoundWordTokenFilter(dict, inputText);
 
     assertTokenStreamContents(tf,
             new String[] {inputText, "Hase", "tasse"},
@@ -139,15 +138,32 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
   }
 
 
-  private DictionaryCompoundWordTokenFilter createDictionaryCompoundWordTokenFilter(CharArraySet dict, String inputText) {
-    Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-    tokenizer.setReader(new StringReader(inputText));
-    return new DictionaryCompoundWordTokenFilter(
-            tokenizer,
-            dict,
-            CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
-            CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
-            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, false);
+  public void testSingleSubwordIsNotEmitted() throws Exception {
+    CharArraySet dict = makeDictionary("äbtissin");
+
+    String inputText = "äbtissinnen";
+
+    CompletenessCompoundWordTokenFilter tf = createCompletenessCompoundWordTokenFilter(dict, inputText);
+
+    assertTokenStreamContents(tf,
+            new String[] {inputText}
+    );
+  }
+
+  public void testSubwordsofSubwordsAreNotEmitted() throws IOException {
+    CharArraySet dict = makeDictionary("aal", "räucherei", "che", "her");
+
+    String inputText = "aalräucherei";
+
+    CompletenessCompoundWordTokenFilter tf = createCompletenessCompoundWordTokenFilter(dict, inputText);
+
+    assertTokenStreamContents(tf,
+            new String[] {inputText, "aal", "räucherei"},
+            new int[] { 0, 0, 0},
+            new int[] { 12, 12, 12},
+            new int[] { 1, 0, 0}
+    );
+
   }
 
 
@@ -156,7 +172,7 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
 
     String inputText = "abcdefg";
 
-    DictionaryCompoundWordTokenFilter tf = createDictionaryCompoundWordTokenFilter(dict, inputText);
+    CompletenessCompoundWordTokenFilter tf = createCompletenessCompoundWordTokenFilter(dict, inputText);
 
     // since "d" is shorter than the minimum subword size, it should not be added to the token stream
     assertTokenStreamContents(tf,
@@ -167,6 +183,19 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
       );
   }
 
+
+  private CompletenessCompoundWordTokenFilter createCompletenessCompoundWordTokenFilter(CharArraySet dict, String inputText) {
+    Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+    tokenizer.setReader(new StringReader(inputText));
+    return new CompletenessCompoundWordTokenFilter(
+            tokenizer,
+            dict,
+            CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
+            CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
+            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, true);
+  }
+
+
   public void testReset() throws Exception {
     CharArraySet dict = makeDictionary("Rind", "Fleisch", "Draht", "Schere", "Gesetz",
         "Aufgabe", "Überwachung");
@@ -174,7 +203,7 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
     MockTokenizer wsTokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
     wsTokenizer.setEnableChecks(false); // we will reset in a strange place
     wsTokenizer.setReader(new StringReader("Rindfleischüberwachungsgesetz"));
-    DictionaryCompoundWordTokenFilter tf = new DictionaryCompoundWordTokenFilter(
+    CompletenessCompoundWordTokenFilter tf = new CompletenessCompoundWordTokenFilter(
         wsTokenizer, dict,
         CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
         CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
@@ -202,7 +231,7 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
     Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
     tokenizer.setReader(new StringReader(inputText));
     TokenStream stream = new MockRetainAttributeFilter(tokenizer);
-    stream = new DictionaryCompoundWordTokenFilter(
+    stream = new CompletenessCompoundWordTokenFilter(
         stream, dict,
         CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
         CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
@@ -285,7 +314,7 @@ public class TestCompoundWordTokenFilter extends BaseTokenStreamTestCase {
       @Override
       protected TokenStreamComponents createComponents(String fieldName) {
         Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
-        TokenFilter filter = new DictionaryCompoundWordTokenFilter(tokenizer, dict);
+        TokenFilter filter = new CompletenessCompoundWordTokenFilter(tokenizer, dict);
         return new TokenStreamComponents(tokenizer, filter);
       }
 

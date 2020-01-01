@@ -27,12 +27,12 @@ import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /** 
- * Factory for {@link DictionaryCompoundWordTokenFilter}.
+ * Factory for {@link CompletenessCompoundWordTokenFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_dictcomp" class="solr.TextField" positionIncrementGap="100"&gt;
  *   &lt;analyzer&gt;
  *     &lt;tokenizer class="solr.WhitespaceTokenizerFactory"/&gt;
- *     &lt;filter class="solr.DictionaryCompoundWordTokenFilterFactory" dictionary="dictionary.txt"
+ *     &lt;filter class="solr.CompletenessCompoundWordTokenFilterFactory" dictionary="dictionary.txt"
  *         minWordSize="5" minSubwordSize="2" maxSubwordSize="15" onlyLongestMatch="true"/&gt;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
@@ -40,10 +40,10 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * @since 3.1
  * @lucene.spi {@value #NAME}
  */
-public class DictionaryCompoundWordTokenFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
+public class CompletenessCompoundWordTokenFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
 
   /** SPI name */
-  public static final String NAME = "dictionaryCompoundWord";
+  public static final String NAME = "completenessCompoundWord";
 
   private CharArraySet dictionary;
   private final String dictFile;
@@ -52,8 +52,8 @@ public class DictionaryCompoundWordTokenFilterFactory extends TokenFilterFactory
   private final int maxSubwordSize;
   private final boolean onlyLongestMatch;
 
-  /** Creates a new DictionaryCompoundWordTokenFilterFactory */
-  public DictionaryCompoundWordTokenFilterFactory(Map<String, String> args) {
+  /** Creates a new CompletenessCompoundWordTokenFilterFactory */
+  public CompletenessCompoundWordTokenFilterFactory(Map<String, String> args) {
     super(args);
     dictFile = require(args, "dictionary");
     minWordSize = getInt(args, "minWordSize", CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE);
@@ -76,7 +76,7 @@ public class DictionaryCompoundWordTokenFilterFactory extends TokenFilterFactory
     if (dictionary == null) {
       return input;
     }
-    return new DictionaryCompoundWordTokenFilter(input, dictionary, minWordSize, minSubwordSize, maxSubwordSize, onlyLongestMatch);
+    return new CompletenessCompoundWordTokenFilter(input, dictionary, minWordSize, minSubwordSize, maxSubwordSize, onlyLongestMatch);
   }
 }
 

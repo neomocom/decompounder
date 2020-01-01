@@ -27,7 +27,7 @@ import org.apache.lucene.analysis.Tokenizer;
 /**
  * Simple tests to ensure the Dictionary compound filter factory is working.
  */
-public class TestDictionaryCompoundWordTokenFilterFactory extends BaseTokenStreamFactoryTestCase {
+public class TestCompletenessCompoundWordTokenFilterFactory extends BaseTokenStreamFactoryTestCase {
   /**
    * Ensure the filter actually decompounds text.
    */
@@ -35,7 +35,7 @@ public class TestDictionaryCompoundWordTokenFilterFactory extends BaseTokenStrea
     Reader reader = new StringReader("I like to play softball");
     TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
     ((Tokenizer)stream).setReader(reader);
-    stream = tokenFilterFactory("DictionaryCompoundWord", 
+    stream = tokenFilterFactory("completenessCompoundWord",
         "dictionary", "compoundDictionary.txt").create(stream);
     assertTokenStreamContents(stream, 
         new String[] { "I", "like", "to", "play", "softball", "soft", "ball" });
@@ -44,7 +44,7 @@ public class TestDictionaryCompoundWordTokenFilterFactory extends BaseTokenStrea
   /** Test that bogus arguments result in exception */
   public void testBogusArguments() throws Exception {
     IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {      
-      tokenFilterFactory("DictionaryCompoundWord", 
+      tokenFilterFactory("completenessCompoundWord",
           "dictionary", "compoundDictionary.txt", 
           "bogusArg", "bogusValue");
     });
