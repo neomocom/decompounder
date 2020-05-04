@@ -32,13 +32,13 @@ version = 1.0
 apply plugin: 'maven-publish'
 
 dependencies {
-    testCompile "junit:junit:$junitVersion"
-    testCompile "org.slf4j:slf4j-jdk14:$slf4jVersion"
-    testCompile "org.apache.lucene:lucene-test-framework:$luceneVersion"
+    testImplementation "junit:junit:$junitVersion"
+    testImplementation "org.slf4j:slf4j-jdk14:$slf4jVersion"
+    testImplementation "org.apache.lucene:lucene-test-framework:$luceneVersion"
 
-    compile "org.slf4j:slf4j-api:$slf4jVersion"
-    compile "org.apache.lucene:lucene-core:$luceneVersion"
-    compile "org.apache.lucene:lucene-analyzers-common:$luceneVersion"
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
+    implementation "org.apache.lucene:lucene-core:$luceneVersion"
+    implementation "org.apache.lucene:lucene-analyzers-common:$luceneVersion"
 }
 
 

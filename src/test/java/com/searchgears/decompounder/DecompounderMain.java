@@ -14,7 +14,7 @@ import java.io.Reader;
 @Ignore
 public class DecompounderMain extends BaseTokenStreamFactoryTestCase {
     public void testDictionarySplits() throws Exception {
-        Reader reader = new FileReader("/Users/jsprivat/testinput");
+        Reader reader = new FileReader("/Users/jsprivat/searchgears/vlb/testinput");
         TokenStream stream = new MockTokenizer(MockTokenizer.WHITESPACE, false);
         ((Tokenizer) stream).setReader(reader);
         stream = tokenFilterFactory("completenessCompoundWord",
