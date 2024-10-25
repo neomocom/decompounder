@@ -1,24 +1,6 @@
-buildscript {
-    ext.javaRepos = {
-        mavenLocal()
-        maven {
-            url nexusRepositoryUrl + "/maven-public/"
-            credentials {
-                username = nexusDownloadUser
-                password = nexusDownloadPassword
-            }
-        }
-        mavenCentral()
-        jcenter()
-    }
-}
-
 plugins {
     id 'com.github.ben-manes.versions' version '0.27.0'
 }
-
-
-repositories javaRepos
 
 apply plugin: 'java'
 
@@ -29,7 +11,10 @@ targetCompatibility = 1.8
 
 version = 1.0
 
-apply plugin: 'maven-publish'
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
 
 dependencies {
     testImplementation "junit:junit:$junitVersion"
@@ -38,7 +23,7 @@ dependencies {
 
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation "org.apache.lucene:lucene-core:$luceneVersion"
-    implementation "org.apache.lucene:lucene-analyzers-common:$luceneVersion"
+    implementation "org.apache.lucene:lucene-analysis-common:$luceneVersion"
 }
 
 

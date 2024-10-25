@@ -14,15 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.searchgears.decompounder;
+package com.neomo.decompounder;
 
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.lucene.analysis.BaseTokenStreamTestCase;
-import org.apache.lucene.analysis.util.*;
+import org.apache.lucene.analysis.AbstractAnalysisFactory;
+import org.apache.lucene.analysis.CharFilterFactory;
+import org.apache.lucene.analysis.TokenizerFactory;
+import org.apache.lucene.tests.analysis.BaseTokenStreamTestCase;
+import org.apache.lucene.analysis.TokenFilterFactory;
+import org.apache.lucene.util.ClasspathResourceLoader;
+import org.apache.lucene.util.ResourceLoader;
+import org.apache.lucene.util.ResourceLoaderAware;
 import org.apache.lucene.util.Version;
 
 /** 
@@ -57,7 +63,7 @@ public abstract class BaseTokenStreamFactoryTestCase extends BaseTokenStreamTest
       String previous = args.put("luceneMatchVersion", matchVersion.toString());
       assertNull("duplicate values for key: luceneMatchVersion", previous);
     }
-    AbstractAnalysisFactory factory = null;
+    AbstractAnalysisFactory factory;
     try {
       factory = clazz.getConstructor(Map.class).newInstance(args);
     } catch (InvocationTargetException e) {

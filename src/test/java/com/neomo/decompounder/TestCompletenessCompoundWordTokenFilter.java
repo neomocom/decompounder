@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.searchgears.decompounder;
+package com.neomo.decompounder;
 
 
 import java.io.IOException;
@@ -23,15 +23,15 @@ import java.io.StringReader;
 import java.util.Arrays;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.BaseTokenStreamTestCase;
+import org.apache.lucene.tests.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
-import org.apache.lucene.analysis.MockTokenizer;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.charfilter.MappingCharFilter;
 import org.apache.lucene.analysis.charfilter.NormalizeCharMap;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.tests.analysis.MockTokenizer;
 import org.apache.lucene.util.Attribute;
 import org.apache.lucene.util.AttributeImpl;
 import org.apache.lucene.util.AttributeReflector;
@@ -71,6 +71,23 @@ public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTest
             new int[] { 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
         0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1,
         1 });
+  }
+
+  public void testLongerSubwordImpedesSplitDE() throws Exception {
+    CharArraySet dict = makeDictionary("ratgeber", "ratgebers", "seite");
+
+    CompletenessCompoundWordTokenFilter tf = new CompletenessCompoundWordTokenFilter(
+            whitespaceMockTokenizer(
+                    "ratgeberseite ratgebersseite Seitenratgeber"),
+            dict, CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
+            CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
+            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, true);
+
+    assertTokenStreamContents(tf, new String[] { "ratgeberseite", "ratgebersseite", "ratgebers", "seite",
+                    "Seitenratgeber", "Seite", "ratgeber" },
+            new int[] { 0, 14, 14, 14, 29, 29, 29},
+            new int[] { 13, 28, 28, 28, 43, 43, 43},
+            new int[] { 1, 1, 0, 0, 1, 0, 0});
   }
 
   public void testDumbCompoundWordsSELongestMatch() throws Exception {
@@ -244,8 +261,7 @@ public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTest
 
   }
 
-
-  public static interface MockRetainAttribute extends Attribute {
+  public interface MockRetainAttribute extends Attribute {
     void setRetain(boolean attr);
     boolean getRetain();
   }

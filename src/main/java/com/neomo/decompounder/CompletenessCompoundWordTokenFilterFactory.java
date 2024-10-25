@@ -14,17 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.searchgears.decompounder;
-
+package com.neomo.decompounder;
 
 import java.io.IOException;
 import java.util.Map;
 
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.util.ResourceLoader;
-import org.apache.lucene.analysis.util.ResourceLoaderAware;
-import org.apache.lucene.analysis.util.TokenFilterFactory;
+
+import org.apache.lucene.analysis.TokenFilterFactory;
+import org.apache.lucene.util.ResourceLoader;
+import org.apache.lucene.util.ResourceLoaderAware;
 
 /** 
  * Factory for {@link CompletenessCompoundWordTokenFilter}.
@@ -51,6 +51,11 @@ public class CompletenessCompoundWordTokenFilterFactory extends TokenFilterFacto
   private final int minSubwordSize;
   private final int maxSubwordSize;
   private final boolean onlyLongestMatch;
+
+  // needed to match META-INF.services (for test)
+  public CompletenessCompoundWordTokenFilterFactory() {
+    throw new IllegalArgumentException("Configuration Error: missing parameter dictionary name");
+  }
 
   /** Creates a new CompletenessCompoundWordTokenFilterFactory */
   public CompletenessCompoundWordTokenFilterFactory(Map<String, String> args) {

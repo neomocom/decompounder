@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.searchgears.decompounder;
+package com.neomo.decompounder;
 
 
 
@@ -82,7 +82,8 @@ public class CompletenessCompoundWordTokenFilter extends CompoundWordTokenFilter
             if(i+j>len) {
                 break;
             }
-            if(dictionary.contains(termAtt.buffer(), i, j)) {
+            char[] buffer = termAtt.buffer();
+            if(dictionary.contains(buffer, i, j)) {
                 if (this.onlyLongestMatch) {
                    if (longestMatchToken!=null) {
                      if (longestMatchToken.txt.length()<j) {
