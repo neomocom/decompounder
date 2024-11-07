@@ -14,7 +14,7 @@ public class DecompounderMain extends BaseTokenStreamFactoryTestCase {
 
     @Ignore
     public void testDictionarySplits() throws Exception {
-        Reader reader = new StringReader("fuselfasel stängelkohlsalz unda finderhälftes kitafinder");
+        Reader reader = new StringReader("fuselfasel stängelkohlsalz unda finderhälfte kitafinder");
         TokenStream stream = whitespaceMockTokenizer(reader);
         stream = tokenFilterFactory("completenessCompoundWord",
                 "dictionary", "de-dictionary.dic", "minSubwordSize", "3", "onlyLongestMatch", "true",
