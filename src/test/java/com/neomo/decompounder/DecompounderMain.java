@@ -4,7 +4,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
-import org.junit.jupiter.api.Disabled;
+import org.junit.Ignore;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -12,7 +12,7 @@ import java.io.StringReader;
 
 public class DecompounderMain extends BaseTokenStreamFactoryTestCase {
 
-    @Disabled
+    @Ignore
     public void testDictionarySplits() throws Exception {
         Reader reader = new StringReader("fuselfasel stängelkohlsalz unda finderhälftes kitafinder");
         TokenStream stream = whitespaceMockTokenizer(reader);
