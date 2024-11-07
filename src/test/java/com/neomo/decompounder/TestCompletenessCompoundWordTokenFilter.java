@@ -20,9 +20,13 @@ package com.neomo.decompounder;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
 import org.apache.lucene.tests.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.TokenFilter;
@@ -35,6 +39,8 @@ import org.apache.lucene.tests.analysis.MockTokenizer;
 import org.apache.lucene.util.Attribute;
 import org.apache.lucene.util.AttributeImpl;
 import org.apache.lucene.util.AttributeReflector;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 
 public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTestCase {
@@ -81,13 +87,72 @@ public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTest
                     "ratgeberseite ratgebersseite Seitenratgeber"),
             dict, CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
             CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
-            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, true);
+            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, true, false);
 
     assertTokenStreamContents(tf, new String[] { "ratgeberseite", "ratgebersseite", "ratgebers", "seite",
                     "Seitenratgeber", "Seite", "ratgeber" },
             new int[] { 0, 14, 14, 14, 29, 29, 29},
             new int[] { 13, 28, 28, 28, 43, 43, 43},
             new int[] { 1, 1, 0, 0, 1, 0, 0});
+  }
+
+  public void testCompoundDictionaryEntryIsDeduplicated() throws Exception {
+    CharArraySet dict = makeDictionary("kindergarten");
+
+    CompletenessCompoundWordTokenFilter tf = new CompletenessCompoundWordTokenFilter(
+            whitespaceMockTokenizer(
+                    "ein kindergarten"),
+            dict, CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
+            CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
+            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, true, false);
+
+    assertTokenStreamContents(tf, new String[] { "ein", "kindergarten" },
+            new int[] { 0, 4},
+            new int[] { 3, 16},
+            new int[] { 1, 1});
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  public void testGraphModeLeadsToSameTokens(boolean useGraphMode) throws Exception {
+    CharArraySet dict = makeDictionary("schnitzelheimer", "risiko", "leben", "versicherung");
+
+    MockTokenizer wsTokenizer = whitespaceMockTokenizer(
+            "die risikolebensversicherung schnitzelheimer");
+    CompletenessCompoundWordTokenFilter tf = new CompletenessCompoundWordTokenFilter(
+            wsTokenizer,
+            dict, CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
+            CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
+            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, true, useGraphMode);
+
+    assertTokenStreamContents(tf, new String[] { "die", "risikolebensversicherung", "risiko", "leben", "versicherung",
+                    "schnitzelheimer" },
+            new int[] { 0, 4, 4, 4, 29},
+            new int[] { 3, 28, 28, 28, 43}
+    );
+  }
+
+  public void testGraphModeLeadsToTokensSpanningMultiplePositions() throws Exception {
+    CharArraySet dict = makeDictionary("schnitzelheimer", "risiko", "leben", "versicherung");
+
+    MockTokenizer wsTokenizer = whitespaceMockTokenizer(
+            "die risikolebensversicherung schnitzelheimer");
+    CompletenessCompoundWordTokenFilter tf = new CompletenessCompoundWordTokenFilter(
+            wsTokenizer,
+            dict, CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
+            CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
+            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, true, true);
+    tf.reset();
+    // use the following approach instead of assertTokenStreamContents because that method resets streams and
+    // leads to wrong positionLength values (plus: sometimes does not set the token types)
+    ArrayList<Integer> positionIncrements = new ArrayList<>();
+    ArrayList<Integer> positionLengths = new ArrayList<>();
+    while(tf.incrementToken()) {
+      positionIncrements.add(tf.getAttribute(PositionIncrementAttribute.class).getPositionIncrement());
+      positionLengths.add(tf.getAttribute(PositionLengthAttribute.class).getPositionLength());
+    }
+    assertEquals(List.of(1, 1, 0, 1, 1, 1), positionIncrements);
+    assertEquals(List.of(1, 3, 1, 1, 1, 1), positionLengths);
   }
 
   public void testDumbCompoundWordsSELongestMatch() throws Exception {
@@ -99,7 +164,9 @@ public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTest
         whitespaceMockTokenizer("Basfiolsfodralmakaregesäll"),
         dict, CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
         CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
-        CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, true);
+        CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE,
+            true,
+            false);
 
     assertTokenStreamContents(tf, new String[] { "Basfiolsfodralmakaregesäll", "Bas",
         "fiolsfodral", "makare", "gesäll" }, new int[] { 0, 0, 0,
@@ -201,6 +268,8 @@ public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTest
   }
 
 
+
+
   private CompletenessCompoundWordTokenFilter createCompletenessCompoundWordTokenFilter(CharArraySet dict, String inputText) {
     Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
     tokenizer.setReader(new StringReader(inputText));
@@ -209,7 +278,9 @@ public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTest
             dict,
             CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
             CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
-            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, true);
+            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE,
+            true,
+            false);
   }
 
 
@@ -224,7 +295,10 @@ public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTest
         wsTokenizer, dict,
         CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
         CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
-        CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, false);
+        CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE,
+            false,
+            false
+    );
 
     CharTermAttribute termAtt = tf.getAttribute(CharTermAttribute.class);
     tf.reset();
@@ -252,7 +326,10 @@ public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTest
         stream, dict,
         CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
         CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
-        CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE, false);
+        CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE,
+            false,
+            false
+    );
     MockRetainAttribute retAtt = stream.addAttribute(MockRetainAttribute.class);
     stream.reset();
     while (stream.incrementToken()) {

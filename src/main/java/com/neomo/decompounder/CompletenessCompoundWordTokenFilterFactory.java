@@ -52,6 +52,8 @@ public class CompletenessCompoundWordTokenFilterFactory extends TokenFilterFacto
   private final int maxSubwordSize;
   private final boolean onlyLongestMatch;
 
+  private final boolean useGraphMode;
+
   // needed to match META-INF.services (for test)
   public CompletenessCompoundWordTokenFilterFactory() {
     throw new IllegalArgumentException("Configuration Error: missing parameter dictionary name");
@@ -65,6 +67,7 @@ public class CompletenessCompoundWordTokenFilterFactory extends TokenFilterFacto
     minSubwordSize = getInt(args, "minSubwordSize", CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE);
     maxSubwordSize = getInt(args, "maxSubwordSize", CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE);
     onlyLongestMatch = getBoolean(args, "onlyLongestMatch", true);
+    useGraphMode = getBoolean(args, "useGraphMode", false);
     if (!args.isEmpty()) {
       throw new IllegalArgumentException("Unknown parameters: " + args);
     }
@@ -81,7 +84,8 @@ public class CompletenessCompoundWordTokenFilterFactory extends TokenFilterFacto
     if (dictionary == null) {
       return input;
     }
-    return new CompletenessCompoundWordTokenFilter(input, dictionary, minWordSize, minSubwordSize, maxSubwordSize, onlyLongestMatch);
+    return new CompletenessCompoundWordTokenFilter(input, dictionary, minWordSize, minSubwordSize, maxSubwordSize,
+            onlyLongestMatch, useGraphMode);
   }
 }
 

@@ -1,5 +1,7 @@
 plugins {
+    id 'maven-publish'
     id 'com.github.ben-manes.versions' version '0.27.0'
+    id 'com.google.cloud.artifactregistry.gradle-plugin' version '2.2.0'
 }
 
 apply plugin: 'java'
@@ -9,7 +11,8 @@ javadoc.failOnError = false
 sourceCompatibility = 11
 targetCompatibility = 11
 
-version = 1.1
+version = "1.2.1"
+group = "com.neomo"
 
 repositories {
     mavenLocal()
@@ -17,7 +20,9 @@ repositories {
 }
 
 dependencies {
-    testImplementation "junit:junit:$junitVersion"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
     testImplementation "org.slf4j:slf4j-jdk14:$slf4jVersion"
     testImplementation "org.apache.lucene:lucene-test-framework:$luceneVersion"
 
@@ -26,8 +31,20 @@ dependencies {
     implementation "org.apache.lucene:lucene-analysis-common:$luceneVersion"
 }
 
-
-
 sourceSets.test {
     resources.srcDirs = ["src/test/resources"]
 }
+
+publishing {
+    publications {
+        maven(MavenPublication)  {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url = "artifactregistry://europe-maven.pkg.dev/contentsurfacingservice/public"
+        }
+    }
+}
+

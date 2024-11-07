@@ -63,9 +63,14 @@ public class CompletenessCompoundWordTokenFilter extends CompoundWordTokenFilter
    * @param onlyLongestMatch
    *          Add only the longest matching subword to the stream
    */
-  public CompletenessCompoundWordTokenFilter(TokenStream input, CharArraySet dictionary,
-                                             int minWordSize, int minSubwordSize, int maxSubwordSize, boolean onlyLongestMatch) {
-    super(input, dictionary, minWordSize, minSubwordSize, maxSubwordSize, onlyLongestMatch);
+  public CompletenessCompoundWordTokenFilter(TokenStream input,
+                                             CharArraySet dictionary,
+                                             int minWordSize,
+                                             int minSubwordSize,
+                                             int maxSubwordSize,
+                                             boolean onlyLongestMatch,
+                                             boolean useGraphMode) {
+    super(input, dictionary, minWordSize, minSubwordSize, maxSubwordSize, onlyLongestMatch, useGraphMode);
     if (dictionary == null) {
       throw new IllegalArgumentException("dictionary must not be null");
     }
@@ -111,6 +116,11 @@ public class CompletenessCompoundWordTokenFilter extends CompoundWordTokenFilter
            tokenLen += token.txt.length();
         }
         if (tokenLen < (len - getNumberOfSeams() * MAX_LETTERS_IN_SEAM)) {
+            tokens.clear();
+        }
+        // remove duplicate tokens that result from a dictionary entry covering the whole compound word:
+        // Kindergarten => Kindergarten (no split => keep only the original token)
+        if (tokens.size() == 1 && tokens.getFirst().txt.equals(termAtt.toString())) {
             tokens.clear();
         }
     }
