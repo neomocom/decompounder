@@ -1,17 +1,14 @@
 plugins {
+    alias(libs.plugins.versions)
+    alias(libs.plugins.gcpublish)
     id 'maven-publish'
-    id 'com.github.ben-manes.versions' version '0.27.0'
-    id 'com.google.cloud.artifactregistry.gradle-plugin' version '2.2.0'
 }
 
 apply plugin: 'java'
 
 javadoc.failOnError = false
 
-sourceCompatibility = 11
-targetCompatibility = 11
-
-version = "1.2.2"
+version = "1.2.3"
 group = "com.neomo"
 
 repositories {
@@ -20,15 +17,14 @@ repositories {
 }
 
 dependencies {
-    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
-    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
-    testImplementation "org.slf4j:slf4j-jdk14:$slf4jVersion"
-    testImplementation "org.apache.lucene:lucene-test-framework:$luceneVersion"
-
-    implementation "org.slf4j:slf4j-api:$slf4jVersion"
-    implementation "org.apache.lucene:lucene-core:$luceneVersion"
-    implementation "org.apache.lucene:lucene-analysis-common:$luceneVersion"
+    implementation(libs.slf4j.jdk14)
+    implementation(libs.slf4j.api)
+    implementation(libs.lucene.core)
+    implementation(libs.lucene.analysis.common)
+    testImplementation(libs.junit5.api)
+    testImplementation(libs.junit5.params)
+    testImplementation(libs.lucene.test)
+    testRuntimeOnly(libs.junit5.engine)
 }
 
 sourceSets.test {
