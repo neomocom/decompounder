@@ -14,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.searchgears.decompounder;
+package com.neomo.decompounder;
 
 
 import java.io.Reader;
 import java.io.StringReader;
 
-import org.apache.lucene.analysis.MockTokenizer;
+
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.tests.analysis.MockTokenizer;
 
 /**
  * Simple tests to ensure the Dictionary compound filter factory is working.
@@ -42,12 +43,10 @@ public class TestCompletenessCompoundWordTokenFilterFactory extends BaseTokenStr
   }
   
   /** Test that bogus arguments result in exception */
-  public void testBogusArguments() throws Exception {
-    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> {      
-      tokenFilterFactory("completenessCompoundWord",
-          "dictionary", "compoundDictionary.txt", 
-          "bogusArg", "bogusValue");
-    });
+  public void testBogusArguments() {
+    IllegalArgumentException expected = expectThrows(IllegalArgumentException.class, () -> tokenFilterFactory("completenessCompoundWord",
+        "dictionary", "compoundDictionary.txt",
+        "bogusArg", "bogusValue"));
     assertTrue(expected.getMessage().contains("Unknown parameters"));
   }
 }

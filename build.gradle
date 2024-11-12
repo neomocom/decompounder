@@ -1,48 +1,46 @@
-buildscript {
-    ext.javaRepos = {
-        mavenLocal()
-        maven {
-            url nexusRepositoryUrl + "/maven-public/"
-            credentials {
-                username = nexusDownloadUser
-                password = nexusDownloadPassword
-            }
-        }
-        mavenCentral()
-        jcenter()
-    }
-}
-
 plugins {
-    id 'com.github.ben-manes.versions' version '0.27.0'
+    alias(libs.plugins.versions)
+    alias(libs.plugins.gcpublish)
+    id 'maven-publish'
 }
-
-
-repositories javaRepos
 
 apply plugin: 'java'
 
 javadoc.failOnError = false
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+version = "1.2.3"
+group = "com.neomo"
 
-version = 1.0
-
-apply plugin: 'maven-publish'
-
-dependencies {
-    testImplementation "junit:junit:$junitVersion"
-    testImplementation "org.slf4j:slf4j-jdk14:$slf4jVersion"
-    testImplementation "org.apache.lucene:lucene-test-framework:$luceneVersion"
-
-    implementation "org.slf4j:slf4j-api:$slf4jVersion"
-    implementation "org.apache.lucene:lucene-core:$luceneVersion"
-    implementation "org.apache.lucene:lucene-analyzers-common:$luceneVersion"
+repositories {
+    mavenLocal()
+    mavenCentral()
 }
 
-
+dependencies {
+    implementation(libs.slf4j.jdk14)
+    implementation(libs.slf4j.api)
+    implementation(libs.lucene.core)
+    implementation(libs.lucene.analysis.common)
+    testImplementation(libs.junit5.api)
+    testImplementation(libs.junit5.params)
+    testImplementation(libs.lucene.test)
+    testRuntimeOnly(libs.junit5.engine)
+}
 
 sourceSets.test {
     resources.srcDirs = ["src/test/resources"]
 }
+
+publishing {
+    publications {
+        maven(MavenPublication)  {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url = "artifactregistry://europe-maven.pkg.dev/contentsurfacingservice/public"
+        }
+    }
+}
+
