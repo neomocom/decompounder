@@ -26,7 +26,7 @@ import org.apache.lucene.analysis.TokenFilterFactory;
 import org.apache.lucene.util.ResourceLoader;
 import org.apache.lucene.util.ResourceLoaderAware;
 
-/** 
+/**
  * Factory for {@link CompletenessCompoundWordTokenFilter}.
  * <pre class="prettyprint">
  * &lt;fieldType name="text_dictcomp" class="solr.TextField" positionIncrementGap="100"&gt;
@@ -37,55 +37,59 @@ import org.apache.lucene.util.ResourceLoaderAware;
  *   &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  *
- * @since 3.1
  * @lucene.spi {@value #NAME}
+ * @since 3.1
  */
 public class CompletenessCompoundWordTokenFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
 
-  /** SPI name */
-  public static final String NAME = "completenessCompoundWord";
+    /**
+     * SPI name
+     */
+    public static final String NAME = "completenessCompoundWord";
 
-  private CharArraySet dictionary;
-  private final String dictFile;
-  private final int minWordSize;
-  private final int minSubwordSize;
-  private final int maxSubwordSize;
-  private final boolean onlyLongestMatch;
+    private CharArraySet dictionary;
+    private final String dictFile;
+    private final int minWordSize;
+    private final int minSubwordSize;
+    private final int maxSubwordSize;
+    private final boolean onlyLongestMatch;
 
-  private final boolean useGraphMode;
+    private final boolean useGraphMode;
 
-  // needed to match META-INF.services (for test)
-  public CompletenessCompoundWordTokenFilterFactory() {
-    throw new IllegalArgumentException("Configuration Error: missing parameter dictionary name");
-  }
-
-  /** Creates a new CompletenessCompoundWordTokenFilterFactory */
-  public CompletenessCompoundWordTokenFilterFactory(Map<String, String> args) {
-    super(args);
-    dictFile = require(args, "dictionary");
-    minWordSize = getInt(args, "minWordSize", CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE);
-    minSubwordSize = getInt(args, "minSubwordSize", CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE);
-    maxSubwordSize = getInt(args, "maxSubwordSize", CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE);
-    onlyLongestMatch = getBoolean(args, "onlyLongestMatch", true);
-    useGraphMode = getBoolean(args, "useGraphMode", false);
-    if (!args.isEmpty()) {
-      throw new IllegalArgumentException("Unknown parameters: " + args);
+    // needed to match META-INF.services (for test)
+    public CompletenessCompoundWordTokenFilterFactory() {
+        throw new IllegalArgumentException("Configuration Error: missing parameter dictionary name");
     }
-  }
-  
-  @Override
-  public void inform(ResourceLoader loader) throws IOException {
-    dictionary = super.getWordSet(loader, dictFile, false);
-  }
-  
-  @Override
-  public TokenStream create(TokenStream input) {
-    // if the dictionary is null, it means it was empty
-    if (dictionary == null) {
-      return input;
+
+    /**
+     * Creates a new CompletenessCompoundWordTokenFilterFactory
+     */
+    public CompletenessCompoundWordTokenFilterFactory(Map<String, String> args) {
+        super(args);
+        dictFile = require(args, "dictionary");
+        minWordSize = getInt(args, "minWordSize", CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE);
+        minSubwordSize = getInt(args, "minSubwordSize", CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE);
+        maxSubwordSize = getInt(args, "maxSubwordSize", CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE);
+        onlyLongestMatch = getBoolean(args, "onlyLongestMatch", true);
+        useGraphMode = getBoolean(args, "useGraphMode", false);
+        if (!args.isEmpty()) {
+            throw new IllegalArgumentException("Unknown parameters: " + args);
+        }
     }
-    return new CompletenessCompoundWordTokenFilter(input, dictionary, minWordSize, minSubwordSize, maxSubwordSize,
-            onlyLongestMatch, useGraphMode);
-  }
+
+    @Override
+    public void inform(ResourceLoader loader) throws IOException {
+        dictionary = super.getWordSet(loader, dictFile, false);
+    }
+
+    @Override
+    public TokenStream create(TokenStream input) {
+        // if the dictionary is null, it means it was empty
+        if (dictionary == null) {
+            return input;
+        }
+        return new CompletenessCompoundWordTokenFilter(input, dictionary, minWordSize, minSubwordSize, maxSubwordSize,
+                onlyLongestMatch, useGraphMode);
+    }
 }
 

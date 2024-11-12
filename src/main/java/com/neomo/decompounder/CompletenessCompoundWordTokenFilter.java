@@ -17,7 +17,6 @@
 package com.neomo.decompounder;
 
 
-
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.CharArraySet;
 
@@ -26,105 +25,96 @@ import org.apache.lucene.analysis.CharArraySet;
  * <p>
  * "Donaudampfschiff" becomes Donau, dampf, schiff so that you can find
  * "Donaudampfschiff" even when you only enter "schiff".
- *  It uses a brute-force algorithm to achieve this.
+ * It uses a brute-force algorithm to achieve this.
  */
 public class CompletenessCompoundWordTokenFilter extends CompoundWordTokenFilterBase {
 
     public static final int MAX_LETTERS_IN_SEAM = 2;
 
     /**
-   * Creates a new {@link CompletenessCompoundWordTokenFilter}
-   *
-   * @param input
-   *          the {@link org.apache.lucene.analysis.TokenStream} to process
-   * @param dictionary
-   *          the word dictionary to match against.
-   */
-  public CompletenessCompoundWordTokenFilter(TokenStream input, CharArraySet dictionary) {
-    super(input, dictionary);
-    if (dictionary == null) {
-      throw new IllegalArgumentException("dictionary must not be null");
+     * Creates a new {@link CompletenessCompoundWordTokenFilter}
+     *
+     * @param input      the {@link org.apache.lucene.analysis.TokenStream} to process
+     * @param dictionary the word dictionary to match against.
+     */
+    public CompletenessCompoundWordTokenFilter(TokenStream input, CharArraySet dictionary) {
+        super(input, dictionary);
+        if (dictionary == null) {
+            throw new IllegalArgumentException("dictionary must not be null");
+        }
     }
-  }
 
-  /**
-   * Creates a new {@link CompletenessCompoundWordTokenFilter}
-   *
-   * @param input
-   *          the {@link org.apache.lucene.analysis.TokenStream} to process
-   * @param dictionary
-   *          the word dictionary to match against.
-   * @param minWordSize
-   *          only words longer than this get processed
-   * @param minSubwordSize
-   *          only subwords longer than this get to the output stream
-   * @param maxSubwordSize
-   *          only subwords shorter than this get to the output stream
-   * @param onlyLongestMatch
-   *          Add only the longest matching subword to the stream
-   */
-  public CompletenessCompoundWordTokenFilter(TokenStream input,
-                                             CharArraySet dictionary,
-                                             int minWordSize,
-                                             int minSubwordSize,
-                                             int maxSubwordSize,
-                                             boolean onlyLongestMatch,
-                                             boolean useGraphMode) {
-    super(input, dictionary, minWordSize, minSubwordSize, maxSubwordSize, onlyLongestMatch, useGraphMode);
-    if (dictionary == null) {
-      throw new IllegalArgumentException("dictionary must not be null");
+    /**
+     * Creates a new {@link CompletenessCompoundWordTokenFilter}
+     *
+     * @param input            the {@link org.apache.lucene.analysis.TokenStream} to process
+     * @param dictionary       the word dictionary to match against.
+     * @param minWordSize      only words longer than this get processed
+     * @param minSubwordSize   only subwords longer than this get to the output stream
+     * @param maxSubwordSize   only subwords shorter than this get to the output stream
+     * @param onlyLongestMatch Add only the longest matching subword to the stream
+     */
+    public CompletenessCompoundWordTokenFilter(TokenStream input,
+                                               CharArraySet dictionary,
+                                               int minWordSize,
+                                               int minSubwordSize,
+                                               int maxSubwordSize,
+                                               boolean onlyLongestMatch,
+                                               boolean useGraphMode) {
+        super(input, dictionary, minWordSize, minSubwordSize, maxSubwordSize, onlyLongestMatch, useGraphMode);
+        if (dictionary == null) {
+            throw new IllegalArgumentException("dictionary must not be null");
+        }
     }
-  }
 
-  @Override
-  protected void decompose() {
-    final int len = termAtt.length();
-    int i = 0;
-    while (i<=len-this.minSubwordSize) {
-        CompoundToken longestMatchToken=null;
-        int j;
-        for (j=this.minSubwordSize;j<=this.maxSubwordSize;++j) {
-            if(i+j>len) {
-                break;
-            }
-            char[] buffer = termAtt.buffer();
-            if(dictionary.contains(buffer, i, j)) {
-                if (this.onlyLongestMatch) {
-                   if (longestMatchToken!=null) {
-                     if (longestMatchToken.txt.length()<j) {
-                       longestMatchToken=new CompoundToken(i,j);
-                     }
-                   } else {
-                     longestMatchToken=new CompoundToken(i,j);
-                   }
-                } else {
-                   tokens.add(new CompoundToken(i,j));
+    @Override
+    protected void decompose() {
+        final int len = termAtt.length();
+        int i = 0;
+        while (i <= len - this.minSubwordSize) {
+            CompoundToken longestMatchToken = null;
+            int j;
+            for (j = this.minSubwordSize; j <= this.maxSubwordSize; ++j) {
+                if (i + j > len) {
+                    break;
                 }
-            } 
-        }
-        if (this.onlyLongestMatch && longestMatchToken!=null) {
-          tokens.add(longestMatchToken);
-          i += longestMatchToken.txt.length();
-        } else {
-            i += 1;
-        }
+                if (dictionary.contains(termAtt.buffer(), i, j)) {
+                    if (this.onlyLongestMatch) {
+                        if (longestMatchToken != null) {
+                            if (longestMatchToken.txt.length() < j) {
+                                longestMatchToken = new CompoundToken(i, j);
+                            }
+                        } else {
+                            longestMatchToken = new CompoundToken(i, j);
+                        }
+                    } else {
+                        tokens.add(new CompoundToken(i, j));
+                    }
+                }
+            }
+            if (this.onlyLongestMatch && longestMatchToken != null) {
+                tokens.add(longestMatchToken);
+                i += longestMatchToken.txt.length();
+            } else {
+                i += 1;
+            }
 
+        }
+        if (!tokens.isEmpty()) {
+            int tokenLen = 0;
+            for (CompoundToken token : tokens) {
+                tokenLen += token.txt.length();
+            }
+            if (tokenLen < (len - getNumberOfSeams() * MAX_LETTERS_IN_SEAM)) {
+                tokens.clear();
+            }
+            // remove duplicate tokens that result from a dictionary entry covering the whole compound word:
+            // Kindergarten => Kindergarten (no split => keep only the original token)
+            if (tokens.size() == 1 && tokens.getFirst().txt.equals(termAtt.toString())) {
+                tokens.clear();
+            }
+        }
     }
-    if (!tokens.isEmpty()) {
-        int tokenLen = 0;
-        for (CompoundToken token: tokens) {
-           tokenLen += token.txt.length();
-        }
-        if (tokenLen < (len - getNumberOfSeams() * MAX_LETTERS_IN_SEAM)) {
-            tokens.clear();
-        }
-        // remove duplicate tokens that result from a dictionary entry covering the whole compound word:
-        // Kindergarten => Kindergarten (no split => keep only the original token)
-        if (tokens.size() == 1 && tokens.getFirst().txt.equals(termAtt.toString())) {
-            tokens.clear();
-        }
-    }
-  }
 
     private int getNumberOfSeams() {
         return tokens.size() - 1;
