@@ -41,11 +41,14 @@ dependencies {
 The filter links against Lucene's analysis API, so its version has to match the Lucene
 version of your Solr installation.
 
-| Decompounder | Lucene   | Solr   | Java |
-|--------------|----------|--------|------|
-| 1.2.6        | 9.12.3   | 9.10   | 17   |
-| 1.2.5        | 9.12.3   | 9.10   | 21   |
-| 1.2.4        | 10.3.1   | 10.0.0 | 21   |
+| Decompounder | Lucene | Solr       | Java |
+|--------------|--------|------------|------|
+| 1.2.6        | 9.12.3 | 9.10, 9.11 | 17   |
+| 1.2.5        | 9.12.3 | 9.10, 9.11 | 21   |
+| 1.2.4        | 10.3.1 | 10.0.0     | 21   |
+
+Solr 9.11.0 ships Lucene 9.12.3 — the same, and final, release of the Lucene 9 line — so
+1.2.6 runs on Solr 9.11 without a rebuild. Solr 10.0.0 ships Lucene 10.3.2.
 
 ## Usage in Solr
 
