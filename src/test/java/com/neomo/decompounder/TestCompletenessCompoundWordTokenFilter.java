@@ -40,8 +40,6 @@ import org.apache.lucene.util.Attribute;
 import org.apache.lucene.util.AttributeImpl;
 import org.apache.lucene.util.AttributeReflector;
 import org.junit.Ignore;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 
 public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTestCase {
@@ -105,19 +103,43 @@ public class TestCompletenessCompoundWordTokenFilter extends BaseTokenStreamTest
                 new int[]{1, 1});
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    public void testGraphModeLeadsToSameTokens(boolean useGraphMode) throws Exception {
-        CharArraySet dict = makeDictionary("schnitzelheimer", "risiko", "leben", "versicherung");
+    public void testGraphModeLeadsToSameTokens() throws Exception {
+        for (boolean useGraphMode : new boolean[]{false, true}) {
+            CharArraySet dict = makeDictionary("schnitzelheimer", "risiko", "leben", "versicherung");
 
-        CompletenessCompoundWordTokenFilter tf = completenessCompoundWordTokenFilter(dict,
-                "die risikolebensversicherung schnitzelheimer", useGraphMode);
+            CompletenessCompoundWordTokenFilter tf = completenessCompoundWordTokenFilter(dict,
+                    "die risikolebensversicherung schnitzelheimer", useGraphMode);
 
-        assertTokenStreamContents(tf, new String[]{"die", "risikolebensversicherung", "risiko", "leben", "versicherung",
-                        "schnitzelheimer"},
-                new int[]{0, 4, 4, 4, 29},
-                new int[]{3, 28, 28, 28, 43}
-        );
+            assertTokenStreamContents(tf, new String[]{"die", "risikolebensversicherung", "risiko", "leben",
+                            "versicherung", "schnitzelheimer"},
+                    new int[]{0, 4, 4, 4, 4, 29},
+                    new int[]{3, 28, 28, 28, 28, 44}
+            );
+        }
+    }
+
+    // Catches violations of the TokenStream contract (attribute handling, offsets, reset/end) that the
+    // hand-written tests above cannot reach. This is the canary for Lucene upgrades.
+    public void testRandomStrings() throws Exception {
+        for (boolean useGraphMode : new boolean[]{false, true}) {
+            final CharArraySet dict = makeDictionary("ab", "cd", "ef", "abc", "def", "ghi");
+            Analyzer a = new Analyzer() {
+                @Override
+                protected TokenStreamComponents createComponents(String fieldName) {
+                    Tokenizer tokenizer = new MockTokenizer(MockTokenizer.WHITESPACE, false);
+                    TokenFilter filter = new CompletenessCompoundWordTokenFilter(
+                            tokenizer, dict,
+                            CompoundWordTokenFilterBase.DEFAULT_MIN_WORD_SIZE,
+                            CompoundWordTokenFilterBase.DEFAULT_MIN_SUBWORD_SIZE,
+                            CompoundWordTokenFilterBase.DEFAULT_MAX_SUBWORD_SIZE,
+                            true,
+                            useGraphMode);
+                    return new TokenStreamComponents(tokenizer, filter);
+                }
+            };
+            checkRandomData(random(), a, 1000 * RANDOM_MULTIPLIER);
+            a.close();
+        }
     }
 
     public void testGraphModeLeadsToTokensSpanningMultiplePositions() throws Exception {
